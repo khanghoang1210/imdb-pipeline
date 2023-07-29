@@ -1,13 +1,13 @@
 from airflow.operators.python import PythonOperator
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, date
 from airflow import DAG
 
-from src.utils.fact_movies_crawler import crawl_box_office
 
-# def greet(date):
-#     print(f"hello world, {date}")
+from crawler import crawl_box_office
 
-start_date = datetime(2023, 7, 22)
+    
+start_date = date(2023, 7, 27)
+
 default_args = {
     'owner' : 'khanghoang',
     'retries': 5,
@@ -18,15 +18,15 @@ with DAG (
     default_args=default_args,
     dag_id='crawl_fact',
     description='crawler fact data from box office site',
-    start_date=datetime(2023, 7, 23),
-    schedule_interval='0 0 * * *'
+    start_date=datetime(2023, 7, 26),
+    schedule_interval='0 0 * * 4'
 ) as dag:
     
 
     task1 = PythonOperator(
         task_id = 'crawl_fact_data',
         python_callable=crawl_box_office,
-        op_kwargs={'date': '2023-07-22'}
+        op_kwargs={'date': start_date}
     )
 
     task1

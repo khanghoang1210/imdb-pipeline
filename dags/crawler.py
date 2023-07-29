@@ -1,11 +1,8 @@
 from bs4 import BeautifulSoup
-import get_variables as gav
+from datetime import datetime, date
 import requests
 
-
-
-# from tests.common.utils import get_event_input_by_path
-
+#from src.utils import get_variables as gav
 
 def exrtract_id_movie(url):
     response = requests.get(url)
@@ -16,11 +13,11 @@ def exrtract_id_movie(url):
 
     return id
                       
-def crawl_box_office(date):
-    url_prefix = gav.box_url
+def crawl_box_office(date:date):
+    # url_prefix = gav.box_url
 
-    url = f"{url_prefix}{date}/"
-   # url = f"https://www.boxofficemojo.com/date/{date}"
+    # url = f"{url_prefix}{date}/"
+    url = f"https://www.boxofficemojo.com/date/{date}"
 
     response = requests.get(url)
 
@@ -36,7 +33,7 @@ def crawl_box_office(date):
         revenue = row.find("td",{"class":"mojo-field-type-money"}).text
         movie_info['revenue'] = revenue[1:]
 
-        movie_info['partition_date'] = date
+        movie_info['partition_date'] = date.strftime("%d-%m-%Y")
 
         href = row.find("td",{"class": "mojo-field-type-release"}).find("a").attrs['href']
         url_detail = url[:29] + href
@@ -51,7 +48,7 @@ def crawl_box_office(date):
 
 
 if __name__ == '__main__':
-    crawl_box_office('2023-06-01')
+    crawl_box_office(date=date(2023, 7, 27))
 
 
         
