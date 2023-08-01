@@ -1,6 +1,7 @@
 from bs4 import BeautifulSoup
 from datetime import date
 import requests
+#from config.box_office import BoxOffice
 
 
 #from src.utils import get_variables as gav
@@ -40,14 +41,25 @@ def crawl_box_office(date: date):
         url_detail = url[:29] + href
         movie_daily_info['id'] = extract_id_movie(url_detail)
 
+        # box_office_instance = BoxOffice(
+        #     id=movie_daily_info['id'],
+        #     rank=movie_daily_info['rank'],
+        #     revenue=movie_daily_info['revenue'],
+        #     partition_date=movie_daily_info['partition_date']
+        # )
+        # fact_movie.append(box_office_instance.to_dict())
+
+
         fact_movie.append(movie_daily_info)
 
-    print(fact_movie)
-    print(len(fact_movie))
+    # print(fact_movie)
+    # print(len(fact_movie))
+    # for mv in fact_movie:
+    #     print(mv['id'])
     return fact_movie
 
 
-def crawl_imdb():
+def crawl_imdb(id):
 
     dim_movie = []
     #id = context['task_instance'].xcom_pull(task_ids='exrtract_id_movie')

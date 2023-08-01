@@ -7,6 +7,11 @@ from crawler import crawl_box_office, crawl_imdb
 
     
 start_date = date(2023, 7, 27)
+id_list = []
+box_office_item = crawl_box_office(start_date)
+
+for item in box_office_item:
+    id_list.append(item['id'])
 
 default_args = {
     'owner' : 'khanghoang',
@@ -23,17 +28,17 @@ with DAG (
 ) as dag:
     
 
-    # task1 = PythonOperator(
-    #     task_id = 'crawl_fact_data',
-    #     python_callable=crawl_box_office,
-    #     op_kwargs={'date': start_date}
-    # )
-
-    # task1
-
-    task2 = PythonOperator(
-        task_id = 'crawl_dim_data',
-        python_callable=crawl_imdb,
-        provide_context = True
+    task1 = PythonOperator(
+        task_id = 'crawl_fact_data',
+        python_callable=crawl_box_office,
+        op_kwargs={'date': start_date}
     )
-    task2
+
+    task1
+
+    # task2 = PythonOperator(
+    #     task_id = 'crawl_dim_data',
+    #     python_callable=crawl_imdb,
+    #     provide_context = True
+    # )
+    # task2
