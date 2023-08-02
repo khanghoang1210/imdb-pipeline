@@ -1,10 +1,9 @@
 from bs4 import BeautifulSoup
 from datetime import date
 import requests
-#from config.box_office import BoxOffice
+import get_all_variables as gav
 
 
-#from src.utils import get_variables as gav
 
 def extract_id_movie(url: str):
     response = requests.get(url)
@@ -16,10 +15,9 @@ def extract_id_movie(url: str):
     return id
                       
 def crawl_box_office(date: date):
-    # url_prefix = gav.box_url
+    url_prefix = gav.box_office_path
 
-    # url = f"{url_prefix}{date}/"
-    url = f"https://www.boxofficemojo.com/date/{date}"
+    url = f"{url_prefix}{date}/"
 
     response = requests.get(url)
 
@@ -41,52 +39,49 @@ def crawl_box_office(date: date):
         url_detail = url[:29] + href
         movie_daily_info['id'] = extract_id_movie(url_detail)
 
-        # box_office_instance = BoxOffice(
-        #     id=movie_daily_info['id'],
-        #     rank=movie_daily_info['rank'],
-        #     revenue=movie_daily_info['revenue'],
-        #     partition_date=movie_daily_info['partition_date']
-        # )
-        # fact_movie.append(box_office_instance.to_dict())
-
 
         fact_movie.append(movie_daily_info)
 
     # print(fact_movie)
-    # print(len(fact_movie))
-    # for mv in fact_movie:
-    #     print(mv['id'])
+
     return fact_movie
 
 
-def crawl_imdb(id):
+def crawl_imdb(date: date):
 
+    box_items = crawl_box_office(date)
     dim_movie = []
-    #id = context['task_instance'].xcom_pull(task_ids='exrtract_id_movie')
-    url = f'https://www.imdb.com/title/{id}/'
-    headers = {'User-agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/115.0.0.0 Safari/537.36'}
-    response = requests.get(url, headers=headers)
-    soup = BeautifulSoup(response.content, 'html.parser')
+    url_prefix = gav.imdb_path
+    user_agent = gav.user_agent
+    
+    for movie in box_items:
+        dim_items = {}
+        id = movie['id']
+        url = f"{url_prefix}{id}/"
 
-    title = soup.find("span", {"class":"fDTGTb"}).text
-    movie_id = id
-    url = url
-    director = soup.find("a", {"class": "ipc-metadata-list-item__list-content-item ipc-metadata-list-item__list-content-item--link"}).text
+        headers = {'User-agent': user_agent}
+        response = requests.get(url, headers=headers)
+        soup = BeautifulSoup(response.content, 'html.parser')
 
-    dim_movie.append(movie_id)
-    dim_movie.append(title)
-    dim_movie.append(director)
-    dim_movie.append(url) 
+        dim_items['title'] = soup.find("span", {"class":"fDTGTb"}).text
+        dim_items['movie_id'] = id
+        dim_items['url'] = url
+        dim_items['director'] = soup.find("a", 
+                                          {"class": "ipc-metadata-list-item__list-content-item ipc-metadata-list-item__list-content-item--link"}).text
+
+        dim_movie.append(dim_items)
+
     
 
+    # print(dim_movie)
     return dim_movie
 
 
 
 
-if __name__ == '__main__':
-    crawl_box_office(date=date(2023, 7, 27))
-    #crawl_imdb()
+#if __name__ == '__main__':
+    #crawl_box_office(date=date(2023, 7, 27))
+    #crawl_imdb(date=date(2023, 7, 27))
 
 
         
