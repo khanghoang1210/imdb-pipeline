@@ -25,21 +25,21 @@ with DAG (
 ) as dag:
 
 
-    task1 = PythonOperator(
+    crawl_fact_data = PythonOperator(
         task_id = f'crawl_fact_data',
         python_callable=crawl_box_office,
         op_kwargs={'date': '{{ ds }}'}
     )
 
 
-    task2 = PythonOperator(
+    crawl_dim_data = PythonOperator(
         task_id = f'crawl_dim_data',
         python_callable=crawl_imdb,
         op_kwargs={'date': '{{ ds }}'}
     )
 
 
-    [task1, task2]
+    [crawl_fact_data, crawl_dim_data]
 
     
 
