@@ -1,5 +1,5 @@
 from bs4 import BeautifulSoup
-from datetime import date
+from datetime import date, datetime
 import requests
 import get_all_variables as gav
 
@@ -14,7 +14,8 @@ def extract_id_movie(url: str):
 
     return id
                       
-def crawl_box_office(date: date):
+def crawl_box_office(date):
+
     url_prefix = gav.box_office_path
 
     url = f"{url_prefix}{date}/"
@@ -33,7 +34,7 @@ def crawl_box_office(date: date):
         revenue = row.find("td",{"class":"mojo-field-type-money"}).text
         movie_daily_info['revenue'] = revenue[1:]
 
-        movie_daily_info['partition_date'] = date.strftime("%d-%m-%Y")
+        movie_daily_info['partition_date'] = date
 
         href = row.find("td",{"class": "mojo-field-type-release"}).find("a").attrs['href']
         url_detail = url[:29] + href
@@ -47,8 +48,8 @@ def crawl_box_office(date: date):
     return fact_movie
 
 
-def crawl_imdb(date: date):
-
+def crawl_imdb(date):
+    
     box_items = crawl_box_office(date)
     dim_movie = []
     url_prefix = gav.imdb_path
