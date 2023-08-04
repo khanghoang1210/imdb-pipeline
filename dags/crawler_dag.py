@@ -2,6 +2,8 @@ from airflow.operators.python import PythonOperator
 from datetime import datetime, timedelta, date
 from airflow import DAG
 from airflow.macros import ds_format
+from airflow.decorators import dag, task
+from airflow.providers.postgres.operators.postgres import PostgresOperator
 
 from crawler import crawl_box_office, crawl_imdb
 
@@ -38,8 +40,20 @@ with DAG (
         op_kwargs={'date': '{{ ds }}'}
     )
 
+    create_dim_table = PostgresOperator(
+        task_id = 'connect_to_postgresql',
+        postgres_conn_id='postgre_localhost',
+        sql = """
+                create table if not exists test (
+                    dt date,
+                    dag_id character,
+                    primary key(dt, dag_id)
+                )
+            """
+    )
+    # create_fact_table = PostgresOperator()
 
-    [crawl_fact_data, crawl_dim_data]
+    [crawl_fact_data, crawl_dim_data] >> create_dim_table
 
     
 
