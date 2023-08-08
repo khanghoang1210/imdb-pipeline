@@ -20,41 +20,67 @@ with DAG (
     default_args=default_args,
     dag_id='crawl_data',
     description='crawler data from box office and imdb',
-    start_date=datetime(2023, 7, 25),
-    #end_date=datetime(2023, 7, 31),
+    start_date=datetime(2023, 6, 1),
+    end_date=datetime(2023, 6, 4),
     schedule_interval='@daily'  
     
 ) as dag:
 
 
     crawl_fact_data = PythonOperator(
-        task_id = f'crawl_fact_data',
+        task_id = 'crawl_fact_data',
         python_callable=crawl_box_office,
         op_kwargs={'date': '{{ ds }}'}
     )
 
 
     crawl_dim_data = PythonOperator(
-        task_id = f'crawl_dim_data',
+        task_id = 'crawl_dim_data',
         python_callable=crawl_imdb,
         op_kwargs={'date': '{{ ds }}'}
     )
-
-    create_dim_table = PostgresOperator(
-        task_id = 'connect_to_postgresql',
-        postgres_conn_id='postgre_localhost',
+    create_fact_table = PostgresOperator(
+        task_id = 'create_fact_table',
+        postgres_conn_id='postgres_localhost',
         sql = """
-                create table if not exists test (
-                    dt date,
-                    dag_id character,
-                    primary key(dt, dag_id)
+                create table if not exists test_fact (
+                    rank text,
+                    revenue text,
+                    partition_date text,
+                    id text,
+                    primary key(partition_date, id)
                 )
             """
     )
+
+    # create_dim_table = PostgresOperator(
+    #     task_id = 'create_dim_table',
+    #     postgres_conn_id='postgres_localhost',
+    #     sql = """
+    #             create table if not exists test_dim (
+    #                 dt date,
+    #                 dag_id character,
+    #                 primary key(dt, dag_id)
+    #             )
+    #         """
+    # )
+
+    insert_fact_data = PostgresOperator(
+    task_id="insert_data_to_fact_table",
+    postgres_conn_id='postgres_localhost',
+    sql="""
+        INSERT INTO test_fact (rank, revenue, partition_date, id)
+        VALUES (%s, %s, %s, %s)
+    """,
+    # Loop through the list of dictionaries and provide values for each record
+    parameters=[
+        (record['rank'], record['revenue'], record['partition_date'], record['id'])
+        for record in crawl_fact_data.output
+    ]
+)
     # create_fact_table = PostgresOperator()
 
-    [crawl_fact_data, crawl_dim_data] >> create_dim_table
+    [crawl_fact_data] >> create_fact_table >> insert_fact_data
 
-    
 
         
