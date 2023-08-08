@@ -2,6 +2,7 @@ from bs4 import BeautifulSoup
 from datetime import date, datetime
 import requests
 import get_all_variables as gav
+import psycopg2
 
 
 
@@ -79,10 +80,31 @@ def crawl_imdb(date):
 
 
 
+def create_fact_table():
+    connection = psycopg2.connect(
+        host="localhost",
+        port='5432',
+        database="postgres",
+        user="khanghoang",
+        password="12102003"
+    )
+    
+    cursor = connection.cursor()
 
-#if __name__ == '__main__':
+    cursor.execute(""" create table if not exists fact_tests(
+                rank text, revenue text, partition_date text,
+                id text); """)
+    connection.commit()
+def create_dim_table():
+    pass
+def insert_fact_data():
+    pass
+def insert_dim_data():
+    pass
+
+if __name__ == '__main__':
     #crawl_box_office(date=date(2023, 7, 27))
     #crawl_imdb(date=date(2023, 7, 27))
-
+    create_fact_table()
 
         
