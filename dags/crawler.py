@@ -65,11 +65,11 @@ def crawl_imdb(date):
         response = requests.get(url, headers=headers)
         soup = BeautifulSoup(response.content, 'html.parser')
 
-        dim_items["title"] = soup.find("span", {"class":"fDTGTb"}).text
+        dim_items["title"] = soup.find("span", {"class":"fDTGTb"}).text.replace("'","")
         dim_items["movie_id"] = id
-        dim_items["url"] = url
+        dim_items["url"] = url.replace("'","")
         dim_items["director"] = soup.find("a", 
-                                          {"class": "ipc-metadata-list-item__list-content-item ipc-metadata-list-item__list-content-item--link"}).text
+                                          {"class": "ipc-metadata-list-item__list-content-item ipc-metadata-list-item__list-content-item--link"}).text.replace("'","")
 
         dim_movie.append(dim_items)
 
