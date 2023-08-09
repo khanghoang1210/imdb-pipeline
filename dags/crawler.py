@@ -2,7 +2,7 @@ from bs4 import BeautifulSoup
 from datetime import date, datetime
 import requests
 import get_all_variables as gav
-import psycopg2
+import json
 
 
 
@@ -30,21 +30,21 @@ def crawl_box_office(date):
 
     for row in rows[1:]:
         movie_daily_info = {}
-        movie_daily_info['rank'] = row.find("td",{"class":"mojo-header-column"}).text
+        movie_daily_info["rank"] = row.find("td",{"class":"mojo-header-column"}).text
 
         revenue = row.find("td",{"class":"mojo-field-type-money"}).text
-        movie_daily_info['revenue'] = revenue[1:]
+        movie_daily_info["revenue"] = revenue[1:]
 
-        movie_daily_info['partition_date'] = date
+        movie_daily_info["partition_date"] = date
 
         href = row.find("td",{"class": "mojo-field-type-release"}).find("a").attrs['href']
         url_detail = url[:29] + href
-        movie_daily_info['id'] = extract_id_movie(url_detail)
+        movie_daily_info["id"] = extract_id_movie(url_detail)
 
 
         fact_movie.append(movie_daily_info)
 
-    # print(fact_movie)
+    #print(fact_movie)
 
     return fact_movie
 
@@ -58,17 +58,17 @@ def crawl_imdb(date):
     
     for movie in box_items:
         dim_items = {}
-        id = movie['id']
+        id = movie["id"]
         url = f"{url_prefix}{id}/"
 
         headers = {'User-agent': user_agent}
         response = requests.get(url, headers=headers)
         soup = BeautifulSoup(response.content, 'html.parser')
 
-        dim_items['title'] = soup.find("span", {"class":"fDTGTb"}).text
-        dim_items['movie_id'] = id
-        dim_items['url'] = url
-        dim_items['director'] = soup.find("a", 
+        dim_items["title"] = soup.find("span", {"class":"fDTGTb"}).text
+        dim_items["movie_id"] = id
+        dim_items["url"] = url
+        dim_items["director"] = soup.find("a", 
                                           {"class": "ipc-metadata-list-item__list-content-item ipc-metadata-list-item__list-content-item--link"}).text
 
         dim_movie.append(dim_items)
@@ -79,32 +79,6 @@ def crawl_imdb(date):
     return dim_movie
 
 
-
-def create_fact_table():
-    connection = psycopg2.connect(
-        host="localhost",
-        port='5432',
-        database="postgres",
-        user="khanghoang",
-        password="12102003"
-    )
-    
-    cursor = connection.cursor()
-
-    cursor.execute(""" create table if not exists fact_tests(
-                rank text, revenue text, partition_date text,
-                id text); """)
-    connection.commit()
-def create_dim_table():
-    pass
-def insert_fact_data():
-    pass
-def insert_dim_data():
-    pass
-
 if __name__ == '__main__':
-    #crawl_box_office(date=date(2023, 7, 27))
+    crawl_box_office(date=date(2023, 7, 27))
     #crawl_imdb(date=date(2023, 7, 27))
-    create_fact_table()
-
-        
