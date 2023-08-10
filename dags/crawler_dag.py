@@ -40,6 +40,8 @@ def read_and_insert_dim_data(**kwargs):
         sql = """
             insert into movies (title, movie_id, url, director)
             values (%s, %s, %s, %s)
+            ON CONFLICT (movie_id) 
+            DO NOTHING
             """
         pg_hook.run(sql, parameters=(item['title'], item['movie_id'], item['url'], item['director']))
 
@@ -53,8 +55,8 @@ with DAG (
     default_args=default_args,
     dag_id='crawl_data',
     description='crawler data from box office and imdb',
-    start_date=datetime(2023, 8, 4),
-    end_date=datetime(2023, 8, 6),
+    start_date=datetime(2023, 6, 1),
+    end_date=datetime(2023, 6, 5),
     schedule_interval='@daily'  
     
 ) as dag:

@@ -79,6 +79,6 @@ def crawl_imdb(date):
     return dim_movie
 
 
-if __name__ == '__main__':
-    crawl_box_office(date=date(2023, 7, 27))
+# if __name__ == '__main__':
+#     crawl_box_office(date=date(2023, 7, 27))
     #crawl_imdb(date=date(2023, 7, 27))
