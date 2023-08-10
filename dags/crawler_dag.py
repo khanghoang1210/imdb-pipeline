@@ -125,4 +125,4 @@ with DAG (
     crawl_fact_data >> create_fact_table >> insert_fact_data_to_postgres
     crawl_dim_data >> create_dim_table >> insert_dim_data_to_postgres
 
-        
+    
