@@ -1,3 +1,4 @@
+# Import libraries
 from airflow.operators.python import PythonOperator
 from datetime import datetime, timedelta, date
 from airflow import DAG
@@ -6,7 +7,7 @@ from airflow.providers.postgres.hooks.postgres import PostgresHook
 from crawler import crawl_box_office, crawl_imdb
 import json
 
-
+# Insert fact data to PostgreSQL
 def read_and_insert_fact_data(**kwargs):
     ti = kwargs['ti']
 
@@ -25,7 +26,7 @@ def read_and_insert_fact_data(**kwargs):
         pg_hook.run(sql, parameters=(item['rank'], item['revenue'], item['partition_date'], item['id']))
 
 
-
+# Insert dim data to PostgreSQL
 def read_and_insert_dim_data(**kwargs):
     ti = kwargs['ti']
     crawled_data = ti.xcom_pull(task_ids='crawl_dim_data')
@@ -51,6 +52,7 @@ default_args = {
     'retry_delay': timedelta(minutes=2)
 }
 
+# Define Dag
 with DAG (
     default_args=default_args,
     dag_id='crawl_data',
@@ -61,7 +63,7 @@ with DAG (
     
 ) as dag:
 
-
+    # Crawl fact data task
     crawl_fact_data = PythonOperator(
         task_id = 'crawl_fact_data',
         python_callable=crawl_box_office,
@@ -71,6 +73,7 @@ with DAG (
     )
 
 
+    # Crawl dim data task
     crawl_dim_data = PythonOperator(
         task_id = 'crawl_dim_data',
         python_callable=crawl_imdb,
@@ -79,7 +82,7 @@ with DAG (
         do_xcom_push=True
     )
 
-
+    # Create fact table task
     create_fact_table = PostgresOperator(
         task_id='create_fact_table',
         postgres_conn_id='postgres_localhost',
@@ -94,6 +97,7 @@ with DAG (
         """
     )
 
+    # Create dim table task
     create_dim_table = PostgresOperator(
         task_id='create_dim_table',
         postgres_conn_id='postgres_localhost',
@@ -108,6 +112,8 @@ with DAG (
         """
     )
     
+
+    # Insert fact data task
     insert_fact_data_to_postgres = PythonOperator(
     task_id='insert_fact_data_to_postgres',
     python_callable=read_and_insert_fact_data,
@@ -115,6 +121,7 @@ with DAG (
     op_kwargs={} 
     )
 
+    # Insert dim data task
     insert_dim_data_to_postgres = PythonOperator(
         task_id = 'insert_dim_data_to_postgres',
         python_callable=read_and_insert_dim_data,
@@ -122,6 +129,7 @@ with DAG (
         op_kwargs={}
     )
     
+    # Define dependencies
     crawl_fact_data >> create_fact_table >> insert_fact_data_to_postgres
     crawl_dim_data >> create_dim_table >> insert_dim_data_to_postgres
 
