@@ -43,13 +43,15 @@ try:
     hdfs_client = InsecureClient("http://localhost:9870", user="hive")
     
     # Path to datalake   
-    table_location = f"/hive/user/datalake/{table_name}"
+    table_location = f"/hive/user/datalake/"
 
     if not hdfs_client.status(table_location, strict=False):
         hdfs_client.makedirs(table_location)
         logger.info(f"Path '{table_location}' created successfully in HDFS.")
     else:
         logger.info(f"Path '{table_location}' already exists in HDFS.")
+
+
     # Read data from Postgres to Spark DataFrame
     df = spark.read \
               .format("jdbc") \
@@ -58,13 +60,26 @@ try:
               .option("user", user) \
               .option("password", password) \
               .option("driver", "org.postgresql.Driver") \
-              .load()
+              .load()\
+              
+    logger.info("Read data completed.")
 
+    # Validate dataframe
     df.show()
     df.printSchema()
+    
+    # Full datalake path
+    file_path = f"hdfs://localhost:9000/hive/user/datalake/{table_name}"
+    
+    # Load spark dataframe into datalake
+    logger.info("Load Spark DataFrame into HDFS is started...")
+    df.coalesce(1) \
+        .write \
+        .format('csv') \
+        .save(file_path, header=True, compression='snappy')
 
-
-    logger.info("Read data completed.")
+    logger.info("Ingestion is completed.")
+ 
 except Exception as exp:
     logger.error("Error in method ingestion. Please check the Stack Trace: %s", str(exp), exc_info=True)
     raise
