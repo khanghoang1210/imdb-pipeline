@@ -35,7 +35,7 @@ def crawl_box_office(date):
         revenue = row.find("td",{"class":"mojo-field-type-money"}).text
         movie_daily_info["revenue"] = revenue[1:]
 
-        movie_daily_info["partition_date"] = date
+        movie_daily_info["crawled_date"] = date
 
         href = row.find("td",{"class": "mojo-field-type-release"}).find("a").attrs['href']
         url_detail = url[:29] + href
@@ -70,7 +70,7 @@ def crawl_imdb(date):
         dim_items["url"] = url.replace("'","")
         dim_items["director"] = soup.find("a", 
                                           {"class": "ipc-metadata-list-item__list-content-item ipc-metadata-list-item__list-content-item--link"}).text.replace("'","")
-
+        #dim_items["crawled_date"] = date
         dim_movie.append(dim_items)
 
     

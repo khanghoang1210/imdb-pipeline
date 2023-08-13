@@ -20,10 +20,10 @@ def read_and_insert_fact_data(**kwargs):
 
     for item in json_fact_data:
         sql = """
-        INSERT INTO movie_revenue (rank, revenue, partition_date, id)
+        INSERT INTO movie_revenue (rank, revenue, crawled_date, id)
         VALUES (%s, %s, %s, %s)
         """
-        pg_hook.run(sql, parameters=(item['rank'], item['revenue'], item['partition_date'], item['id']))
+        pg_hook.run(sql, parameters=(item['rank'], item['revenue'], item['crawled_date'], item['id']))
 
 
 # Insert dim data to PostgreSQL
@@ -90,9 +90,9 @@ with DAG (
             CREATE TABLE IF NOT EXISTS movie_revenue (
             rank integer,
             revenue text,
-            partition_date text,
+            crawled_date text,
             id text,
-            primary key(partition_date, id)
+            primary key(crawled_date, id)
         )
         """
     )
