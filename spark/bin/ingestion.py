@@ -1,6 +1,6 @@
 # Import libraries
 from pyspark.sql import SparkSession
-from pyspark.sql.functions import lit, monotonically_increasing_id
+from pyspark.sql.functions import lit, monotonically_increasing_id, to_date
 import logging
 import logging.config
 from py4j.java_gateway import java_import
@@ -49,13 +49,14 @@ try:
     file_path = f"hdfs://localhost:9000/hive/user/datalake/{table_name}"
 
     # Path to datalake   
-    table_location = f"/hive/user/datalake/{table_name}"
+    table_location = f"/hive/user/datalake/"
 
     query = ""
+    last_crawled_date = df.select("crawled_date").agg({"crawled_date": "max"}).collect()[0]["max(crawled_date)"]
     if not hdfs_client.status(table_location, strict=False):  
-        #hdfs_client.makedirs(table_location)
-        df = spark.read.csv(file_path)
-        record_id = df
+        hdfs_client.makedirs(table_location)
+        # df = spark.read.csv(file_path)
+        # record_id = df
         logger.info(f"Path '{table_location}' created successfully in HDFS.")
     else:
         logger.info(f"Path '{table_location}' already exists in HDFS.")
@@ -76,6 +77,7 @@ try:
     jdbcDF = jdbcDF.withColumn("idx", monotonically_increasing_id())
     
     # Validate dataframe
+    
     jdbcDF.show()
     jdbcDF.printSchema()
     
