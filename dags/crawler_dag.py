@@ -91,7 +91,7 @@ with DAG (
             CREATE TABLE IF NOT EXISTS movie_revenue (
             rank integer,
             revenue text,
-            crawled_date text,
+            crawled_date date,
             id text,
             primary key(crawled_date, id)
         )
@@ -108,7 +108,7 @@ with DAG (
             movie_id text,
             url text,
             director text,
-            crawled_date text,
+            crawled_date date,
             primary key(movie_id)
         )
         """
