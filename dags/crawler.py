@@ -70,15 +70,15 @@ def crawl_imdb(date):
         dim_items["url"] = url.replace("'","")
         dim_items["director"] = soup.find("a", 
                                           {"class": "ipc-metadata-list-item__list-content-item ipc-metadata-list-item__list-content-item--link"}).text.replace("'","")
-        #dim_items["crawled_date"] = date
+        dim_items["crawled_date"] = date
         dim_movie.append(dim_items)
 
     
 
-    # print(dim_movie)
+    #print(dim_movie)
     return dim_movie
 
 
 # if __name__ == '__main__':
 #     crawl_box_office(date=date(2023, 7, 27))
-    #crawl_imdb(date=date(2023, 7, 27))
+#     crawl_imdb(date=date(2023, 7, 27))

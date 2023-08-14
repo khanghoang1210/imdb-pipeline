@@ -39,12 +39,13 @@ def read_and_insert_dim_data(**kwargs):
     
     for item in json_dim_data:
         sql = """
-            insert into movies (title, movie_id, url, director)
-            values (%s, %s, %s, %s)
+            insert into movies (title, movie_id, url, director, crawled_date)
+            values (%s, %s, %s, %s, %s)
             ON CONFLICT (movie_id) 
-            DO NOTHING
+            DO UPDATE
+            SET crawled_date = EXCLUDED.crawled_date
             """
-        pg_hook.run(sql, parameters=(item['title'], item['movie_id'], item['url'], item['director']))
+        pg_hook.run(sql, parameters=(item['title'], item['movie_id'], item['url'], item['director'], item['crawled_date']))
 
 default_args = {
     'owner' : 'khanghoang',
@@ -107,6 +108,7 @@ with DAG (
             movie_id text,
             url text,
             director text,
+            crawled_date text,
             primary key(movie_id)
         )
         """
