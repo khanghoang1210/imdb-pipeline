@@ -1,6 +1,6 @@
 # Import libraries
 from pyspark.sql import SparkSession
-from pyspark.sql.functions import lit
+from pyspark.sql.functions import lit, monotonically_increasing_id
 import logging
 import logging.config
 from py4j.java_gateway import java_import
@@ -41,19 +41,29 @@ try:
     java_import(spark._jvm, "org.apache.hadoop.fs.Path")
 
     hdfs_client = InsecureClient("http://localhost:9870", user="hive")
-    
-    # Path to datalake   
-    table_location = f"/hive/user/datalake/"
 
-    if not hdfs_client.status(table_location, strict=False):
-        hdfs_client.makedirs(table_location)
+    # Get lastest record
+
+
+    # Full datalake path
+    file_path = f"hdfs://localhost:9000/hive/user/datalake/{table_name}"
+
+    # Path to datalake   
+    table_location = f"/hive/user/datalake/{table_name}"
+
+    query = ""
+    if not hdfs_client.status(table_location, strict=False):  
+        #hdfs_client.makedirs(table_location)
+        df = spark.read.csv(file_path)
+        record_id = df
         logger.info(f"Path '{table_location}' created successfully in HDFS.")
     else:
         logger.info(f"Path '{table_location}' already exists in HDFS.")
 
 
+
     # Read data from Postgres to Spark DataFrame
-    df = spark.read \
+    jdbcDF = spark.read \
               .format("jdbc") \
               .option("url", "jdbc:postgresql://localhost:5434/postgres") \
               .option("dbtable", table_name) \
@@ -63,17 +73,18 @@ try:
               .load()\
               
     logger.info("Read data completed.")
-
-    # Validate dataframe
-    df.show()
-    df.printSchema()
+    jdbcDF = jdbcDF.withColumn("idx", monotonically_increasing_id())
     
-    # Full datalake path
-    file_path = f"hdfs://localhost:9000/hive/user/datalake/{table_name}"
+    # Validate dataframe
+    jdbcDF.show()
+    jdbcDF.printSchema()
+    
+
     
     # Load spark dataframe into datalake
     logger.info("Load Spark DataFrame into HDFS is started...")
-    df.coalesce(1) \
+
+    jdbcDF.coalesce(1) \
         .write \
         .format('csv') \
         .save(file_path, header=True, compression='snappy')
