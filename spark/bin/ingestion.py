@@ -66,7 +66,7 @@ try:
         crawled_date_str = str(df.select("crawled_date").agg({"crawled_date": "max"}).collect()[0]["max(crawled_date)"])
         last_crawled_date = datetime.strptime(crawled_date_str, '%Y-%m-%d').date()
         query = f"(SELECT * FROM {table_name} WHERE (crawled_date > DATE '{last_crawled_date}')) AS tmp"
-        logger.info(f"Path '{table_location}' already exists in HDFS. Incremental load is completed.")
+        logger.info(f"Path '{table_location}' already exists in HDFS. Incremental load is started.")
 
     # Read data from Postgres to Spark DataFrame
     jdbcDF = spark.read \
@@ -81,7 +81,6 @@ try:
     logger.info("Read data completed.")
     
     # Validate dataframe
-    
     jdbcDF.show()
     jdbcDF.printSchema()
     
@@ -93,7 +92,7 @@ try:
         .format('csv') \
         .save(file_path, header=True, compression='snappy', mode='append')
 
-    logger.info("Ingestion is completed.")
+    logger.info("Ingestion or incremental load is completed.")
  
 except Exception as exp:
     logger.error("Error in method ingestion. Please check the Stack Trace: %s", str(exp), exc_info=True)
