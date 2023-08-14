@@ -46,33 +46,31 @@ try:
 
     hdfs_client = InsecureClient("http://localhost:9870", user="hive")
 
-    # Get lastest record
-
-
     # Full datalake path
     file_path = f"hdfs://localhost:9000/hive/user/datalake/{table_name}"
 
-    # Path to datalake   
+    # Get latest record in hdfs
     table_location = f"/hive/user/datalake/{table_name}"
-
-    query = ""
+    table_query = ""
     
     if not hdfs_client.status(table_location, strict=False):  
         #hdfs_client.makedirs(table_location)
-        query = f"(SELECT * FROM {table_name}) AS tmp"
+        table_query = f"(SELECT * FROM {table_name}) AS tmp"
         logger.info(f"Path '{table_location}' created successfully in HDFS with new data")
     else:
         df = spark.read.csv(file_path, header=True)
-        crawled_date_str = str(df.select("crawled_date").agg({"crawled_date": "max"}).collect()[0]["max(crawled_date)"])
-        last_crawled_date = datetime.strptime(crawled_date_str, '%Y-%m-%d').date()
-        query = f"(SELECT * FROM {table_name} WHERE (crawled_date > DATE '{last_crawled_date}')) AS tmp"
+        
+        # Get latest value of crawled_date field
+        last_crawled_date = df.select("crawled_date").agg({"crawled_date": "max"}).collect()[0]["max(crawled_date)"]
+
+        table_query = f"(SELECT * FROM {table_name} WHERE (crawled_date > DATE '{last_crawled_date}')) AS tmp"
         logger.info(f"Path '{table_location}' already exists in HDFS. Incremental load is started.")
 
     # Read data from Postgres to Spark DataFrame
     jdbcDF = spark.read \
               .format("jdbc") \
               .option("url", "jdbc:postgresql://localhost:5434/postgres") \
-              .option("dbtable", query) \
+              .option("dbtable", table_query) \
               .option("user", user) \
               .option("password", password) \
               .option("driver", "org.postgresql.Driver") \
