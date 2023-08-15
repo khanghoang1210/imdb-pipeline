@@ -1,7 +1,7 @@
 # Import libraries
 from datetime import datetime
 from pyspark.sql import SparkSession
-from pyspark.sql.functions import lit, monotonically_increasing_id, to_date
+from pyspark.sql.functions import col, split
 import logging
 import logging.config
 from py4j.java_gateway import java_import
@@ -85,10 +85,19 @@ try:
     # Load spark dataframe into datalake
     logger.info("Load Spark DataFrame into HDFS is started...")
 
+    # Make partition to save data
+    split_col = split(jdbcDF["crawled_date"], "-")
+
+    jdbcDF = jdbcDF.withColumn("year", split_col[0].cast("int"))
+    jdbcDF = jdbcDF.withColumn("month", split_col[1].cast("int"))
+    jdbcDF = jdbcDF.withColumn("day", split_col[2].cast("int"))
+
     jdbcDF.coalesce(1) \
         .write \
         .format('csv') \
-        .save(file_path, header=True, compression='snappy', mode='append')
+        .partitionBy("year","month","day")\
+        .save(file_path, header=True, compression='snappy', mode='append')\
+
 
     logger.info("Ingestion or incremental load is completed.")
  
