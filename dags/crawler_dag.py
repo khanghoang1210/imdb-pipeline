@@ -58,8 +58,8 @@ with DAG (
     default_args=default_args,
     dag_id='crawl_data',
     description='crawler data from box office and imdb',
-    start_date=datetime(2023, 6, 1),
-    end_date=datetime(2023, 6, 5),
+    start_date=datetime(2023, 6, 6),
+    end_date=datetime(2023, 6, 9),
     schedule_interval='@daily'  
     
 ) as dag:
