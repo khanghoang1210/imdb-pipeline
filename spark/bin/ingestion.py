@@ -53,8 +53,10 @@ try:
     table_location = f"/hive/user/datalake/{table_name}"
     table_query = ""
     
-    if not hdfs_client.status(table_location, strict=False):  
-        #hdfs_client.makedirs(table_location)
+    # Check record exists in hdfs
+    exists = hdfs_client.status(table_location, strict=False)
+    if not exists:  
+        
         table_query = f"(SELECT * FROM {table_name}) AS tmp"
         logger.info(f"Path '{table_location}' created successfully in HDFS with new data")
     else:
