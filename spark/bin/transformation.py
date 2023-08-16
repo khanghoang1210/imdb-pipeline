@@ -1,7 +1,6 @@
 # Import libraries
 from pyspark.sql import SparkSession
-from pyspark.conf import SparkConf
-
+from pyspark.sql.functions import *
 ## Report:
     # 1.ID
     # 2.Title
@@ -9,17 +8,21 @@ from pyspark.conf import SparkConf
     # 4.total_revenue
     # 5.rank_change
 
-spark = SparkSession.builder \
-    .appName("HiveExample") \
-    .config("hive.metastore.uris", "thrift://localhost:9083")\
-    .enableHiveSupport()\
-    .getOrCreate()
-# Tạo DataFrame từ dữ liệu
-data = [("John", 28), ("Jane", 24), ("Alice", 32)]
-columns = ["name", "age"]
-df = spark.createDataFrame(data, columns)
+# Create Spark Object
+spark = SparkSession\
+            .builder \
+            .master("local")\
+            .appName("Weekly Movie Revenue Report") \
+            .config("hive.metastore.uris", "thrift://localhost:9083")\
+            .config("hive.exec.dynamic.partition", "true")\
+            .config("hive.exec.dynamic.partition.mode", "nonstrict")\
+            .enableHiveSupport()\
+            .getOrCreate()
 
-# Lưu DataFrame vào Hive
-    # Create a Hive table
-tableName = "test1"
-df.write.format("hive").mode("append").saveAsTable(tableName)
+# Load data from datalake to spark dataframe
+df_movies = spark.read.csv("hdfs://localhost:9000/hive/user/datalake/movies").drop("year","month","day")
+df_revenue = spark.read.csv("hdfs://localhost:9000/hive/user/datalake/movie_revenue").drop("year","month","day")
+
+
+
+#df.write.format("hive").mode("append").saveAsTable(tableName)
