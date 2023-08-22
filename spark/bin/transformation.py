@@ -23,8 +23,14 @@ spark = SparkSession\
 df_movies = spark.read.csv("hdfs://localhost:9000/hive/user/datalake/movies", header=True).drop("year","month","day")
 df_revenue = spark.read.csv("hdfs://localhost:9000/hive/user/datalake/movie_revenue", header=True).drop("year","month","day")
 
-df = df_movies.select(col("movie_id").alias("Id"), col("title"))
-preDF = df_revenue.withColumn("revenue", df_revenue.revenue.cast("double"))
+df = df_movies.select(col("movie_id").alias("id"), col("title"))
+
+preDF = df_revenue.withColumn("revenue",regexp_replace(col('revenue'), ',', '').cast("int"))
+total_revenue = preDF.groupBy("id").agg(sum("revenue").alias("total_revenue"))
+
+resDF = df.join(total_revenue, df["id"]==total_revenue["id"],"right")
+
+#preDF = df_revenue.withColumn("revenue", df_revenue.revenue.cast("double"))
 
 
 
