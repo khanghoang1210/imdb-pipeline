@@ -55,8 +55,8 @@ try:
     
     # Check record exists in hdfs
     exists = hdfs_client.status(table_location, strict=False)
+
     if not exists:  
-        
         table_query = f"(SELECT * FROM {table_name}) AS tmp"
         logger.info(f"Path '{table_location}' created successfully in HDFS with new data")
     else:
@@ -64,11 +64,10 @@ try:
         
         # Get latest value of crawled_date field
         last_crawled_date = df.select("crawled_date").agg({"crawled_date": "max"}).collect()[0]["max(crawled_date)"]
-
         table_query = f"(SELECT * FROM {table_name} WHERE (crawled_date > DATE '{last_crawled_date}')) AS tmp"
         logger.info(f"Path '{table_location}' already exists in HDFS. Incremental load is started.")
 
-    # Read data from Postgres to Spark DataFrame
+    # Read latest record from Postgres to Spark DataFrame
     jdbcDF = spark.read \
               .format("jdbc") \
               .option("url", "jdbc:postgresql://localhost:5434/postgres") \
@@ -81,8 +80,8 @@ try:
     logger.info("Read data completed.")
     
     # Validate dataframe
-    jdbcDF.show()
-    jdbcDF.printSchema()
+    logger.info(jdbcDF.show())
+    logger.info(jdbcDF.printSchema())
     
     # Load spark dataframe into datalake
     logger.info("Load Spark DataFrame into HDFS is started...")
