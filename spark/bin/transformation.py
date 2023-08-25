@@ -16,7 +16,7 @@ logger = logging.getLogger(__name__)
 
 try:
     logger.info("Transformation is started...")
-# Create Spark Object
+    # Create Spark Object
     spark = SparkSession\
                 .builder \
                 .master("local")\
@@ -89,6 +89,7 @@ try:
     logger.info("Genarated analysis report")
 
     analysis.write.format("hive").mode("append").saveAsTable("reports.weekly_movies_revenue")
+    logger.info("Save dataframe into Hive completed.")
 except Exception as exp:
     logger.error("Error occur in method transfromation. Please check the Stack Trace, ", str(exp))
     raise
