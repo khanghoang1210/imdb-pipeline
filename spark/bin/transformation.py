@@ -4,6 +4,8 @@ from pyspark.sql.functions import *
 from pyspark.sql.window import Window
 import logging
 import logging.config
+import ingestion
+from utils import parse_args
 ## Report:
     # 1.ID
     # 2.Title
@@ -20,13 +22,19 @@ try:
     spark = SparkSession\
                 .builder \
                 .master("local")\
-                .appName("Weekly Movie Revenue Report") \
+                .appName("Daily Movie Revenue Report") \
                 .config("hive.metastore.uris", "thrift://localhost:9083")\
                 .config("hive.exec.dynamic.partition", "true")\
                 .config("hive.exec.dynamic.partition.mode", "nonstrict")\
                 .enableHiveSupport()\
                 .getOrCreate()
     logger.info("Spark object is created.")
+
+    # get latest date in hdfs 
+    excecution_date = ingestion.last_crawled_date
+    split_col = split(excecution_date, "-")
+    day = split_col[2]
+    month = 
 
     # Load data from datalake to spark dataframe
     df_movies = spark.read.csv("hdfs://localhost:9000/hive/user/datalake/movies", header=True).drop("year","month","day")
