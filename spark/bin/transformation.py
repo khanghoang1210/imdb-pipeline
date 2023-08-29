@@ -4,7 +4,6 @@ from pyspark.sql.functions import *
 from pyspark.sql.window import Window
 import logging
 import logging.config
-import ingestion
 from utils import parse_args
 ## Report:
     # 1.ID
@@ -30,11 +29,15 @@ try:
                 .getOrCreate()
     logger.info("Spark object is created.")
 
-    # get latest date in hdfs 
-    excecution_date = ingestion.last_crawled_date
-    split_col = split(excecution_date, "-")
-    day = split_col[2]
-    month = 
+    # receive argument
+
+    args = parse_args()
+    execution_date = args.execution_date
+    split_col = execution_date.split("-")
+    year_created = split_col[0]
+    month_created = split_col[1]
+    day_created = split_col[2]
+    print(split_col)
 
     # Load data from datalake to spark dataframe
     df_movies = spark.read.csv("hdfs://localhost:9000/hive/user/datalake/movies", header=True).drop("year","month","day")
@@ -92,12 +95,17 @@ try:
 
     # Weekly movie revenue report
     analysis = df_res.join(rank_change, df_res.id==rank_change.id).select(df_res["*"], rank_change["rank_change"])
-    analysis.show(50)
 
+    analysis = analysis.withColumn("year", lit(year_created))\
+                        .withColumn("month", lit(month_created))\
+                        .withColumn("day", lit(day_created))
+    
+    analysis.show(50)
     logger.info("Genarated analysis report")
 
-    analysis.write.format("hive").mode("append").saveAsTable("reports.weekly_movies_revenue")
-    logger.info("Save dataframe into Hive completed.")
+    # Write to data warehouse
+    analysis.write.format("hive").mode("append").partitionBy("year", "month", "day").saveAsTable("reports.movies")
+    logger.info("Write to data warehouse completed.")
 except Exception as exp:
     logger.error("Error occur in method transfromation. Please check the Stack Trace, ", str(exp))
     raise
