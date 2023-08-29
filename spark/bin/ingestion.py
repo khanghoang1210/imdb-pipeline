@@ -30,7 +30,7 @@ try:
     
     
     # receive argument
-    args = parse_args()
+    args = parse_args("--table-name")
     table_name = args.table_name
 
     # Get variables
